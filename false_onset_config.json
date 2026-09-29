@@ -1,0 +1,38 @@
+{
+  "description": "Data-driven false onset detector (V2)",
+  "onset_rain_threshold_mm": 46.2,
+  "antecedent_rain_threshold_mm": 41.0,
+  "min_rainy_days_in_window": 3,
+  "onset_window_days": 5,
+  "post_onset_dry_days_threshold": 10,
+  "dry_spell_risk_oni_above": 0.5,
+  "dry_spell_risk_dmi_below": -0.4,
+  "suppressive_mjo_phases": [
+    5,
+    6,
+    7,
+    8
+  ],
+  "min_mjo_amplitude": 1.0,
+  "dtr_dry_threshold": 12.0,
+  "false_onset_frequency_by_district": {
+    "Beed": 0.471,
+    "Latur": 0.206,
+    "Osmanabad": 0.412,
+    "Solapur": 0.471,
+    "Ahmednagar": 0.706,
+    "Jalna": 0.353,
+    "Aurangabad": 0.324,
+    "Pune": 0.353,
+    "Satara": 0.529,
+    "Kolhapur": 0.412,
+    "Nashik": 0.353,
+    "Nagpur": 0.088,
+    "Amravati": 0.324,
+    "Wardha": 0.176,
+    "Yavatmal": 0.176
+  },
+  "total_false_onset_events": 182,
+  "analysis_years": "1990-2023",
+  "science_note": "DTR (tmax-tmin) proxy for humidity; Dai et al., 1999, J. Climate"
+}

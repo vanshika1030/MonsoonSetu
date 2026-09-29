@@ -4,16 +4,20 @@ import FarmerDashboard from './pages/FarmerDashboard'
 import OfficerDashboard from './pages/OfficerDashboard'
 import AdminDashboard from './pages/AdminDashboard'
 import SysAdminDashboard from './pages/SysAdminDashboard'
+import SarkariParcha from './pages/SarkariParcha'
+import JudgeOverlay from './components/JudgeOverlay'
 
 export default function App() {
   return (
     <BrowserRouter>
+      <JudgeOverlay />
       <Routes>
         <Route path='/' element={<RoleSelect />} />
         <Route path='/farmer' element={<FarmerDashboard />} />
         <Route path='/officer' element={<OfficerDashboard />} />
         <Route path='/admin' element={<AdminDashboard />} />
         <Route path='/sysadmin' element={<SysAdminDashboard />} />
+        <Route path='/parcha' element={<SarkariParcha />} />
         <Route path='*' element={<Navigate to='/' />} />
       </Routes>
     </BrowserRouter>

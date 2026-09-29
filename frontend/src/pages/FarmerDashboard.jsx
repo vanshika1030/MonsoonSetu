@@ -1,14 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CloudRain, Sun, Info, ChevronDown, ChevronUp, Share2, Check, X, AlertTriangle, BarChart3, Globe2, Sprout, Layers, Droplets } from 'lucide-react';
+import { ArrowLeft, CloudRain, Sun, Info, ChevronDown, ChevronUp, Share2, Check, X, AlertTriangle, BarChart3, Globe2, Sprout, Layers, Droplets, Volume2, VolumeX } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { farmerProfile, advisory, climateIndices, weeklyForecastBeed, districts, availableCrops, cropStages, getCropAdvisory } from '../data/mockData';
-
+import VoiceButton from '../components/VoiceButton';
+import { useVoice } from '../hooks/useVoice';
 export default function FarmerDashboard() {
   const [toastVisible, setToastVisible] = useState(false);
   const [indicesExpanded, setIndicesExpanded] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState('soybean');
   const [selectedStage, setSelectedStage] = useState('pre_sowing');
+
+  const { speakAdvisory, isSpeaking, stopSpeaking } = useVoice();
 
   // Get Beed district data for soil info
   const beed = districts.find(d => d.id === 'beed');
@@ -175,7 +178,16 @@ export default function FarmerDashboard() {
             <span className="text-xs text-gray-400">for {selectedCropData?.name?.split(' (')[0]} · {cropStages.find(s => s.id === selectedStage)?.name?.split(' (')[0]}</span>
           </div>
           
-          <p className="text-base font-bold text-gray-900 mb-3 leading-snug">{cropAdvisory.message}</p>
+          <div className="flex items-start gap-2 mb-3">
+            <p className="text-base font-bold text-gray-900 leading-snug">{cropAdvisory.message}</p>
+            <button 
+              onClick={() => isSpeaking ? stopSpeaking() : speakAdvisory(cropAdvisory.message)}
+              className="mt-0.5 shrink-0 bg-gray-100 p-1.5 rounded-full text-gray-600 hover:bg-gray-200"
+              aria-label="Read advisory aloud"
+            >
+              {isSpeaking ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+          </div>
           
           {/* Soil-specific note */}
           {cropAdvisory.soilNote && (
@@ -285,6 +297,13 @@ export default function FarmerDashboard() {
           </a>
         </div>
       </div>
+
+      <VoiceButton 
+        onCropDetected={setSelectedCrop}
+        onStageDetected={setSelectedStage}
+        onFeedback={handleFeedback}
+        advisoryText={cropAdvisory.message}
+      />
     </div>
   );
 }
