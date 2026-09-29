@@ -7,11 +7,15 @@
 
 ---
 
-## 1. Problem Statement (Exact)
+## 1. Problem Statement (Verbatim)
 
-> Build a hybrid predictive framework capable of delivering a 7-to-30-day probabilistic outlook of monsoon behavior at the district/block level, integrating ENSO, IOD, and MJO indices with regional rainfall data, and translating predictions into actionable crop-specific advisories via a mobile-optimized web application.
+> The Indian Summer Monsoon dictates the economic livelihood of millions of farmers, particularly during the Kharif sowing season. While macro-scale monsoon forecasts across large meteorological subdivisions have improved, Indian agriculture remains highly vulnerable to the unpredictable nature of intra-seasonal variations. Specifically, the exact dates of monsoon onset, prolonged dry spells (break-monsoon phases), and subsequent revival cycles vary drastically from one district to another.
+>
+> Standard regional forecasts lack the spatial granularity required for localized agricultural planning. If a farmer sows seeds during a false onset just before a major breakthrough pause, entire crops fail due to moisture stress, leading to crushing financial losses.
+>
+> The challenge is to build a hybrid predictive framework capable of delivering a 7-to-30-day probabilistic outlook of monsoon behavior at the **Block and Panchayat (Village cluster) scale**, by fusing large-scale climate indices (ENSO, IOD, MJO) with high-resolution regional rainfall and temperature data. This framework must translate raw probabilistic forecasts into **dynamic, color-coded risk maps** and an **expert-system engine** that generates crop-specific agronomic advisories (e.g., advising farmers to delay sowing during a predicted break phase, switch to drought-tolerant crop varieties, or activate supplemental irrigation). Delivery must be through a mobile-optimized web application **or automated SMS/WhatsApp API gateway** in regional Indian languages.
 
----
+**PS ID:** SIH 2026 · 26086 · Ministry of Earth Sciences (MoES) / NCMRWF
 
 ## 2. What We Built — Complete Feature Map
 
@@ -114,15 +118,21 @@ Stage 8: FEEDBACK   → Farmer Yes/No → ground truth → model improvement
 
 ## 6. Verified Statistics (with Sources)
 
-| Stat | Value | Source |
-|------|-------|--------|
-| WhatsApp users India | 535M | Industry 2025 |
-| Smartphone households | 85.5% | NSS 80th Round 2025 |
-| Farmer suicides 2024 | 10,546 | NCRB |
-| PMFBY claims since 2016 | ₹1.92 lakh crore | Lok Sabha March 2026 |
-| Rain-fed farmland | 55-60% | Ministry of Agriculture |
-| Agriculture GDP share | 18% | MoSPI FY2025 |
-| IMD forecast error improvement | 7.8% → 2.2% LPA | IMD 2021-2025 |
+| Stat | Value | Source | Verified |
+|------|-------|--------|----------|
+| WhatsApp users India | 535M | Industry reports 2025 | ✅ Widely reported |
+| Smartphone households | 85.5% | NSS 80th Round 2025 | ⚠️ Re-verify before presenting |
+| Farmer suicides 2024 | 10,546 (4,633 cultivators + 5,913 agri labourers) | NCRB ADSI report, 7 May 2026 | ✅ Exact match |
+| Maharashtra farmer suicides 2024 | 3,824 (highest state) | NCRB ADSI report, 7 May 2026 | ✅ Directly relevant — our demo state |
+| PMFBY claims since 2016 | ~₹2 lakh crore (fast-moving figure) | Lok Sabha data; was ₹1.83L cr Aug 2025, ₹2.06L cr Aug 2026 | ⚠️ Re-pull exact current figure before presentation |
+| Rain-fed farmland | 55-60% | Ministry of Agriculture | ✅ |
+| Agriculture GDP share | 18% | MoSPI FY2025 | ✅ |
+| IMD forecast error improvement | 7.5% → 2.28% of LPA (2017-2020 vs 2021-2024) | IMD Multi-Model Ensemble shift 2021 | ✅ Corrected |
+| False onset freq (Beed) | 47.1% | Computed from IMD 0.25° gridded 1990-2023 (false_onset_config.json) | ✅ Our own data |
+| False onset freq (Ahmednagar) | 70.6% | Same dataset — highest in Maharashtra | ✅ Our own data |
+| False onset freq (Nagpur) | 8.8% | Same dataset — lowest (reliable Vidarbha onset) | ✅ Our own data |
+
+> **Note:** False onset frequencies are NOT external citations — they are computed values from our training pipeline (`train_models_v2.py`) using 34 years of IMD gridded data. They are real, checkable, and reproducible.
 
 ---
 
