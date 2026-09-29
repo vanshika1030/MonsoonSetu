@@ -5,6 +5,8 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { farmerProfile, advisory, climateIndices, weeklyForecastBeed, districts, availableCrops, cropStages, getCropAdvisory } from '../data/mockData';
 import VoiceButton from '../components/VoiceButton';
 import { useVoice } from '../hooks/useVoice';
+import AdvisoryComparison from '../components/AdvisoryComparison';
+import FalseOnsetTimeline from '../components/FalseOnsetTimeline';
 export default function FarmerDashboard() {
   const [toastVisible, setToastVisible] = useState(false);
   const [indicesExpanded, setIndicesExpanded] = useState(false);
@@ -215,6 +217,17 @@ export default function FarmerDashboard() {
             </div>
           </div>
         </section>
+
+        {/* WOW Feature: Irrigated vs Rain-fed Comparison */}
+        <AdvisoryComparison
+          cropId={selectedCrop}
+          stageId={selectedStage}
+          breakRisk={breakRisk}
+          soilType={beed?.soilType}
+        />
+
+        {/* WOW Feature: False Onset Timeline Visualization */}
+        {falseOnsetFlag && <FalseOnsetTimeline />}
 
         {/* Soil Info Card */}
         {beed && (

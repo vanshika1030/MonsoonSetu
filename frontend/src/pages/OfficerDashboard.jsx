@@ -1,11 +1,23 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, AlertTriangle, CheckCircle, Users } from 'lucide-react';
-import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { districts, officerCalibrations } from '../data/mockData.js';
 
+const pulseIcon = (color, speed) => L.divIcon({
+  className: '',
+  html: `<div style="position:relative;width:30px;height:30px;">
+    <div style="position:absolute;inset:0;border-radius:50%;background:${color};opacity:0.3;animation:pulse-ring ${speed}s ease-in-out infinite;"></div>
+    <div style="position:absolute;inset:6px;border-radius:50%;background:${color};border:2px solid white;"></div>
+  </div>`,
+  iconSize: [30, 30],
+  iconAnchor: [15, 15],
+});
+
 export default function OfficerDashboard() {
+  const [selectedWeek, setSelectedWeek] = useState(1); // Default to Week 2
   const [formData, setFormData] = useState({
     block: '',
     date: new Date().toISOString().split('T')[0],
@@ -57,32 +69,61 @@ export default function OfficerDashboard() {
               <div className="p-4 border-b border-gray-100">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-blue-600" /> Regional Risk Map
+                  <span className="ml-auto flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-md border border-red-100">
+                    <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> LIVE
+                  </span>
                 </h2>
+                
+                {/* Week Toggle */}
+                <div className="flex gap-2 mt-4">
+                  {[0, 1, 2, 3].map((weekIdx) => (
+                    <button
+                      key={weekIdx}
+                      onClick={() => setSelectedWeek(weekIdx)}
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        selectedWeek === weekIdx
+                          ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                          : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
+                      }`}
+                    >
+                      Week {weekIdx + 1}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="h-[400px] relative z-0">
+                <style>
+                  {`
+                    @keyframes pulse-ring {
+                      0% { transform: scale(1); opacity: 0.6; }
+                      50% { transform: scale(2); opacity: 0.1; }
+                      100% { transform: scale(1); opacity: 0.6; }
+                    }
+                  `}
+                </style>
                 <MapContainer center={[19.7, 75.7]} zoom={7} className="h-full w-full">
                   <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap" />
-                  {districts.map((district) => (
-                    <CircleMarker
-                      key={district.id}
-                      center={[district.lat, district.lon]}
-                      radius={12}
-                      pathOptions={{
-                        fillColor: getRiskColor(district.riskLevel),
-                        fillOpacity: 0.7,
-                        color: 'white',
-                        weight: 2
-                      }}
-                    >
-                      <Popup>
-                        <div className="text-sm">
-                          <p className="font-bold">{district.name}</p>
-                          <p>Break Risk: {district.predictions.break_14d}%</p>
-                          <p>Risk Level: <span style={{color: getRiskColor(district.riskLevel)}} className="font-semibold">{district.riskLevel.toUpperCase()}</span></p>
-                        </div>
-                      </Popup>
-                    </CircleMarker>
-                  ))}
+                  {districts.map((district) => {
+                    const currentRisk = district.weeklyForecast?.[selectedWeek]?.riskLevel || district.riskLevel;
+                    const color = getRiskColor(currentRisk);
+                    const speed = currentRisk === 'high' ? 1.5 : currentRisk === 'moderate' ? 2.5 : 3.5;
+                    
+                    return (
+                      <Marker
+                        key={district.id}
+                        position={[district.lat, district.lon]}
+                        icon={pulseIcon(color, speed)}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <p className="font-bold">{district.name}</p>
+                            <p>Break Risk: {district.predictions.break_14d}%</p>
+                            <p>Risk Level: <span style={{color}} className="font-semibold">{currentRisk?.toUpperCase()}</span></p>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
                 </MapContainer>
                 
                 {/* Legend */}
