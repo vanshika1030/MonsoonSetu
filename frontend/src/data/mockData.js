@@ -801,6 +801,127 @@ export function getCropAdvisory(cropId, stageId, breakRisk, soilType, irrigated)
   return { action: 'MONITOR', severity: 'ROUTINE', message: 'Continue regular practices.', soilNote: null, cropNote: null };
 }
 
+// ============================================================
+// PMFBY INSURANCE DEADLINES (Kharif 2026, Maharashtra)
+// Source: Ministry of Agriculture, Pradhan Mantri Fasal Bima Yojana
+// ============================================================
+
+export const pmfbyDeadlines = {
+  soybean:   { crop: 'Soybean',   lastDate: 'July 15', daysFromNow: 15, premium: '2%',   sumInsured: 44000 },
+  cotton:    { crop: 'Cotton',    lastDate: 'July 31', daysFromNow: 31, premium: '5%',   sumInsured: 40000 },
+  rice:      { crop: 'Rice',      lastDate: 'July 15', daysFromNow: 15, premium: '2%',   sumInsured: 52000 },
+  jowar:     { crop: 'Jowar',     lastDate: 'July 31', daysFromNow: 31, premium: '2%',   sumInsured: 28000 },
+  tur:       { crop: 'Tur Dal',   lastDate: 'Aug 15',  daysFromNow: 46, premium: '2%',   sumInsured: 36000 },
+  bajra:     { crop: 'Bajra',     lastDate: 'July 31', daysFromNow: 31, premium: '2%',   sumInsured: 22000 },
+  maize:     { crop: 'Maize',     lastDate: 'July 31', daysFromNow: 31, premium: '2%',   sumInsured: 30000 },
+  groundnut: { crop: 'Groundnut', lastDate: 'July 15', daysFromNow: 15, premium: '5%',   sumInsured: 48000 },
+};
+
+// ============================================================
+// KVK (Krishi Vigyan Kendra) HELPLINE DATA — 15 districts
+// Source: ICAR KVK Portal (kvk.icar.gov.in)
+// ============================================================
+
+export const kvkDirectory = {
+  beed:       { name: 'KVK Beed',       phone: '02442-230242', distance: '12 km', address: 'Kej Road, Beed' },
+  latur:      { name: 'KVK Latur',      phone: '02382-250132', distance: '8 km',  address: 'Udgir Road, Latur' },
+  solapur:    { name: 'KVK Solapur',    phone: '0217-2744022', distance: '15 km', address: 'Mohol, Solapur' },
+  osmanabad:  { name: 'KVK Osmanabad',  phone: '02472-222580', distance: '10 km', address: 'Tuljapur Road' },
+  ahmednagar: { name: 'KVK Ahmednagar', phone: '0241-2326523', distance: '18 km', address: 'Rahuri, MPKV Campus' },
+  jalna:      { name: 'KVK Jalna',      phone: '02482-220044', distance: '14 km', address: 'Badnapur, Jalna' },
+  aurangabad: { name: 'KVK Aurangabad', phone: '0240-2376001', distance: '20 km', address: 'Paithan Road' },
+  pune:       { name: 'KVK Pune',       phone: '020-25690041', distance: '25 km', address: 'Mahatma Phule Krishi Vidyapeeth' },
+  satara:     { name: 'KVK Satara',     phone: '02162-232046', distance: '12 km', address: 'Koregaon, Satara' },
+  kolhapur:   { name: 'KVK Kolhapur',   phone: '0231-2690271', distance: '10 km', address: 'Shivaji University Campus' },
+  nashik:     { name: 'KVK Nashik',     phone: '0253-2310025', distance: '16 km', address: 'Niphad, Nashik' },
+  nagpur:     { name: 'KVK Nagpur',     phone: '0712-2500067', distance: '22 km', address: 'Dr PDKV Campus, Akola Road' },
+  amravati:   { name: 'KVK Amravati',   phone: '0721-2662296', distance: '14 km', address: 'Dhamangaon Road' },
+  wardha:     { name: 'KVK Wardha',     phone: '07152-243684', distance: '10 km', address: 'Panjabrao Deshmukh Krishi Vidyapeeth' },
+  yavatmal:   { name: 'KVK Yavatmal',   phone: '07232-244530', distance: '16 km', address: 'Waghapur Road' },
+};
+
+// ============================================================
+// SOWING WINDOW CALCULATOR
+// Finds the first safe window based on break risk trajectory
+// ============================================================
+
+export function calculateSowingWindow(weeklyForecast, cropId) {
+  const crop = availableCrops.find(c => c.id === cropId);
+  if (!crop) return null;
+
+  // Threshold depends on drought tolerance
+  const riskThreshold = crop.droughtTolerance === 'very_high' ? 60 :
+                         crop.droughtTolerance === 'high' ? 50 :
+                         crop.droughtTolerance === 'medium' ? 40 : 30;
+
+  // Find first week where break risk drops below threshold
+  const today = new Date();
+  for (let i = 0; i < weeklyForecast.length; i++) {
+    const risk = weeklyForecast[i].probability || weeklyForecast[i].breakRisk || 50;
+    if (risk < riskThreshold) {
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() + (i * 7));
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 6);
+
+      const formatDate = (d) => d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric' });
+      return {
+        found: true,
+        weekNumber: i + 1,
+        startDate: formatDate(startDate),
+        endDate: formatDate(endDate),
+        daysFromNow: i * 7,
+        riskAtWindow: risk,
+        message: i === 0
+          ? 'Safe to sow THIS WEEK'
+          : `Wait ${i * 7} days — safe window starts ${formatDate(startDate)}`,
+        messageHi: i === 0
+          ? 'इस सप्ताह बुआई सुरक्षित है'
+          : `${i * 7} दिन रुकें — सुरक्षित समय ${formatDate(startDate)} से`,
+      };
+    }
+  }
+
+  return {
+    found: false,
+    message: 'No safe sowing window in next 4 weeks. Wait for updated forecast.',
+    messageHi: 'अगले 4 सप्ताह में बुआई का सुरक्षित समय नहीं है। अपडेट का इंतज़ार करें।',
+  };
+}
+
+// ============================================================
+// CROP SWITCHING RECOMMENDER
+// Suggests alternative crops when current crop is too risky
+// ============================================================
+
+export function getAlternativeCrops(currentCropId, stageId, breakRisk, soilType) {
+  const alternatives = [];
+
+  for (const crop of availableCrops) {
+    if (crop.id === currentCropId) continue;
+    if (stageId !== 'pre_sowing') continue; // Only suggest switching before sowing
+
+    const adv = getCropAdvisory(crop.id, 'pre_sowing', breakRisk, soilType, false);
+
+    if (adv.severity !== 'CRITICAL') {
+      alternatives.push({
+        cropId: crop.id,
+        cropName: crop.name,
+        droughtTolerance: crop.droughtTolerance,
+        waterNeedMm: crop.waterNeedMm,
+        action: adv.action,
+        severity: adv.severity,
+        reason: `${crop.name.split(' (')[0]} needs only ${crop.waterNeedMm}mm (drought: ${crop.droughtTolerance.replace('_',' ')})`,
+        reasonHi: `${crop.name.split(' (')[1]?.replace(')','') || crop.name.split(' (')[0]} को सिर्फ ${crop.waterNeedMm}mm पानी चाहिए`,
+      });
+    }
+  }
+
+  // Sort by water need (lowest first = safest)
+  alternatives.sort((a, b) => a.waterNeedMm - b.waterNeedMm);
+  return alternatives.slice(0, 3); // Top 3
+}
+
 export const mockData = {
   districts,
   farmerProfile,
@@ -808,6 +929,10 @@ export const mockData = {
   availableCrops,
   cropStages,
   getCropAdvisory,
+  calculateSowingWindow,
+  getAlternativeCrops,
+  pmfbyDeadlines,
+  kvkDirectory,
   climateIndices,
   feedbackHistory,
   officerCalibrations,
@@ -824,3 +949,4 @@ export const mockData = {
 };
 
 export default mockData;
+

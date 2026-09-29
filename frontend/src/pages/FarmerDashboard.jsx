@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CloudRain, Sun, Info, ChevronDown, ChevronUp, Share2, Check, X, AlertTriangle, BarChart3, Globe2, Sprout, Layers, Droplets, Volume2, VolumeX, Languages } from 'lucide-react';
+import { ArrowLeft, CloudRain, Sun, Info, ChevronDown, ChevronUp, Share2, Check, X, AlertTriangle, BarChart3, Globe2, Sprout, Layers, Droplets, Volume2, VolumeX, Languages, Calendar, Phone, ShieldCheck, RefreshCw } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { farmerProfile, advisory, climateIndices, weeklyForecastBeed, districts, availableCrops, cropStages, getCropAdvisory } from '../data/mockData';
+import { farmerProfile, advisory, climateIndices, weeklyForecastBeed, districts, availableCrops, cropStages, getCropAdvisory, calculateSowingWindow, getAlternativeCrops, pmfbyDeadlines, kvkDirectory } from '../data/mockData';
 import VoiceButton from '../components/VoiceButton';
 import { useVoice } from '../hooks/useVoice';
 import AdvisoryComparison from '../components/AdvisoryComparison';
@@ -82,6 +82,12 @@ export default function FarmerDashboard() {
   }, [selectedCrop, selectedStage, breakRisk]);
 
   const selectedCropData = availableCrops.find(c => c.id === selectedCrop);
+
+  // New features: computed values
+  const sowingWindow = useMemo(() => calculateSowingWindow(weeklyForecastBeed, selectedCrop), [selectedCrop]);
+  const altCrops = useMemo(() => getAlternativeCrops(selectedCrop, selectedStage, breakRisk, beed?.soilType), [selectedCrop, selectedStage, breakRisk]);
+  const insurance = pmfbyDeadlines[selectedCrop];
+  const kvk = kvkDirectory['beed'];
 
   const handleFeedback = () => {
     setToastVisible(true);
@@ -245,6 +251,106 @@ export default function FarmerDashboard() {
               <div className="h-full bg-blue-600 rounded-full transition-all" style={{ width: `${advisory.confidence}%` }}></div>
             </div>
           </div>
+        </section>
+
+        {/* SOWING WINDOW — exact dates, not vague "delay" */}
+        {sowingWindow && (
+          <section className={`p-4 rounded-2xl border flex items-start gap-3 ${
+            sowingWindow.found ? 'bg-blue-50 border-blue-200' : 'bg-amber-50 border-amber-200'
+          }`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+              sowingWindow.found ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'
+            }`}>
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-gray-800">
+                {lang === 'hi' ? 'बुआई का सही समय' : 'Sowing Window'}
+              </h3>
+              <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                {lang === 'hi' ? sowingWindow.messageHi : sowingWindow.message}
+              </p>
+              {sowingWindow.found && (
+                <p className="text-[10px] text-gray-500 mt-1">
+                  {sowingWindow.startDate} – {sowingWindow.endDate} · Risk: {sowingWindow.riskAtWindow}%
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* PMFBY INSURANCE ALERT */}
+        {insurance && cropAdvisory.severity === 'CRITICAL' && (
+          <section className="p-4 rounded-2xl bg-purple-50 border border-purple-200 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-purple-900">
+                {lang === 'hi' ? 'फसल बीमा चेतावनी' : 'Insurance Deadline'}
+              </h3>
+              <p className="text-xs text-purple-800 mt-0.5 font-medium">
+                {lang === 'hi'
+                  ? `PMFBY अंतिम तिथि: ${insurance.lastDate} · बीमित राशि: ₹${insurance.sumInsured.toLocaleString()}`
+                  : `PMFBY deadline: ${insurance.lastDate} · Sum insured: ₹${insurance.sumInsured.toLocaleString()}`
+                }
+              </p>
+              <p className="text-[10px] text-purple-600 mt-1">
+                {lang === 'hi'
+                  ? `प्रीमियम: ${insurance.premium} · देरी से बुआई करने पर बीमा नहीं मिलेगा`
+                  : `Premium: ${insurance.premium} · Sowing after this date voids insurance coverage`
+                }
+              </p>
+            </div>
+          </section>
+        )}
+
+        {/* CROP SWITCHING — alternative crops */}
+        {altCrops.length > 0 && cropAdvisory.severity === 'CRITICAL' && selectedStage === 'pre_sowing' && (
+          <section className="bg-green-50 p-4 rounded-2xl border border-green-200">
+            <h3 className="text-sm font-bold text-green-900 flex items-center gap-2 mb-3">
+              <RefreshCw className="w-4 h-4" />
+              {lang === 'hi' ? 'वैकल्पिक फसल — अभी बो सकते हैं' : 'Switch Crop — Safe to Sow Now'}
+            </h3>
+            <div className="space-y-2">
+              {altCrops.map(alt => (
+                <button
+                  key={alt.cropId}
+                  onClick={() => setSelectedCrop(alt.cropId)}
+                  className="w-full text-left bg-white p-3 rounded-xl border border-green-100 hover:border-green-300 hover:shadow-sm transition-all flex items-center justify-between"
+                >
+                  <div>
+                    <span className="text-sm font-semibold text-gray-800">{alt.cropName.split(' (')[0]}</span>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      {lang === 'hi' ? alt.reasonHi : alt.reason}
+                    </p>
+                  </div>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    alt.severity === 'ROUTINE' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {alt.action.replace(/_/g, ' ')}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* KVK HELPLINE */}
+        <section className="p-4 rounded-2xl bg-gray-50 border border-gray-200 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gray-700 text-white flex items-center justify-center shrink-0">
+            <Phone className="w-5 h-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-xs font-bold text-gray-700">{kvk.name} · {kvk.distance}</h3>
+            <p className="text-[10px] text-gray-500 truncate">{kvk.address}</p>
+          </div>
+          <a
+            href={`tel:${kvk.phone}`}
+            className="px-3 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors shrink-0"
+          >
+            {lang === 'hi' ? 'कॉल करें' : 'Call'}
+          </a>
         </section>
 
         {/* 4. FORECAST CHART */}
