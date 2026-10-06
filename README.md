@@ -212,6 +212,8 @@ Per-district false onset frequencies (computed from 1990-2023 IMD data):
 8. Hears advisory in local language (voice) · Shares on WhatsApp · "Resembles 2015"
 9. Did it rain? YES / NO → daily ground truth at panchayat scale
 ```
+<img width="806" height="1326" alt="WhatsApp Image 2026-10-06 at 9 50 10 PM" src="https://github.com/user-attachments/assets/a1ca6588-18ee-4ef1-a409-a48d9cf696fb" />
+
 
 ### Extension Officer Flow
 ```
@@ -220,12 +222,16 @@ Per-district false onset frequencies (computed from 1990-2023 IMD data):
 3. Visits high-risk villages flagged RED
 4. Enters actual rainfall (mm) from field visit → bias correction
 ```
+<img width="1600" height="1142" alt="WhatsApp Image 2026-10-06 at 9 50 10 PM (1)" src="https://github.com/user-attachments/assets/bb3d5b19-b97b-4580-bc8d-132744a60727" />
+
 
 ### District Authority Flow
 ```
 1. State-level view: which districts need resources NOW
 2. Allocates drought relief / irrigation resources based on risk data
 ```
+<img width="1600" height="1142" alt="WhatsApp Image 2026-10-06 at 9 50 10 PM (2)" src="https://github.com/user-attachments/assets/922a0993-be47-4137-a73c-7699e6f67aa6" />
+
 
 ### Behind the Scenes
 ```
@@ -233,6 +239,8 @@ Per-district false onset frequencies (computed from 1990-2023 IMD data):
 2. Farmer YES/NO + Officer mm readings collected each season
 3. Models retrain with new ground truth → predictions sharpen district by district
 ```
+<img width="1600" height="1142" alt="WhatsApp Image 2026-10-06 at 9 50 11 PM" src="https://github.com/user-attachments/assets/e65bedae-21e4-47dc-981e-14b1003f53eb" />
+
 
 ---
 
